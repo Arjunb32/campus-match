@@ -11,7 +11,13 @@ services:
         generateValue: true
       - key: FLASK_ENV
         value: production
-    databases:
-      - name: matchmaker-db
-        databaseName: matchmaker
-        user: matchmaker
+      - key: DATABASE_URL
+        fromDatabase:
+          name: matchmaker-db
+          property: connectionString
+
+  - type: postgres
+    name: matchmaker-db
+    ipAllowList: []
+    databaseName: matchmaker
+    user: matchmaker
