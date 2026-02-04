@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Sign Up</title>
+    <style>
+        body { font-family: sans-serif; max-width: 400px; margin: 50px auto; text-align: center; }
+        input { display: block; width: 100%; padding: 10px; margin: 10px 0; }
+        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+    <h2>Join the Matchmaker</h2>
+    <p>Use your college email to verify your identity.</p>
+
+    <form method="POST" action="/register">
+        <label>College Email:</label>
+        <input type="email" name="email" placeholder="example@gmail.com" required>
+
+        <label>Password:</label>
+        <input type="password" name="password" placeholder="Create a password" required>
+
+        <button type="submit">Create Account</button>
+    </form>
+
+</body>
+</html>

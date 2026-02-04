@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body { font-family: sans-serif; max-width: 400px; margin: 50px auto; text-align: center; }
+        input { display: block; width: 100%; padding: 10px; margin: 10px 0; }
+        button { background-color: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        a { display: block; margin-top: 10px; color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <h2>Login to Matchmaker</h2>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p style="color: red;">{{ messages[0] }}</p>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/login">
+        <label>Email:</label>
+        <input type="email" name="email" placeholder="Enter your email" required>
+
+        <label>Password:</label>
+        <input type="password" name="password" placeholder="Enter your password" required>
+
+        <button type="submit">Login</button>
+    </form>
+    
+    <a href="/register">Don't have an account? Sign Up</a>
+
+</body>
+</html>

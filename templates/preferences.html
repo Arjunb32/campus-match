@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Partner Preferences</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 30px auto; padding: 20px; }
+        select, button { width: 100%; padding: 10px; margin: 10px 0; }
+        button { background-color: #6c5ce7; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #5541c9; }
+        h2 { text-align: center; color: #333; }
+    </style>
+</head>
+<body>
+
+    <h2>Who are you looking for?</h2>
+    <p style="text-align: center; color: #666;">This helps us find your best match.</p>
+
+    <form method="POST" action="/preferences">
+        
+        <label>I am looking for:</label>
+        <select name="pref_gender">
+            <option value="Any">Any Gender</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+            <option value="Non-binary">Non-binary</option>
+        </select>
+
+        <label>Preferred Year:</label>
+        <select name="pref_year">
+            <option value="Any">Any Year</option>
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+        </select>
+
+        <label>What kind of vibe do you like?</label>
+        <select name="pref_vibe">
+            <option value="Chill">Chill & Quiet (Introvert)</option>
+            <option value="Party">Social & Energetic (Extrovert)</option>
+            <option value="Studious">Focused & Ambitious</option>
+            <option value="Adventurous">Adventurous & Active</option>
+        </select>
+
+        <button type="submit">Find My Matches</button>
+    </form>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Your Profile</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 20px auto; padding: 20px; }
+        input, select, textarea { display: block; width: 100%; padding: 10px; margin: 10px 0; }
+        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; width: 100%; cursor: pointer; }
+        label { font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>Setup Your Profile</h2>
+    <form method="POST" action="/create_profile">
+        
+        <label>First Name:</label>
+        <input type="text" name="first_name" required>
+
+        <label>Last Name:</label>
+        <input type="text" name="last_name" required>
+
+        <label>Gender:</label>
+        <select name="gender">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Non-binary">Non-binary</option>
+        </select>
+
+        <label>Department:</label>
+        <input type="text" name="department" placeholder="e.g. CSE, ECE, Mech" required>
+
+        <label>Year of Study:</label>
+        <select name="year">
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+        </select>
+
+        <label>Orientation (Hidden until matched):</label>
+        <select name="orientation">
+            <option value="Straight">Straight</option>
+            <option value="Gay">Gay</option>
+            <option value="Bisexual">Bisexual</option>
+        </select>
+
+        <label>Relationship Goal:</label>
+        <select name="relationship_goal">
+            <option value="Serious">Serious Relationship</option>
+            <option value="Casual">Casual Dating</option>
+            <option value="Friends">Friends / Study Partner</option>
+        </select>
+         <label style="color: #d63031;">Secret Contact Info (Only revealed to Matches):</label>
+        <input type="text" name="contact_info" placeholder="e.g. Instagram ID, WhatsApp, or Discord Tag" required>
+        <label>Bio (Short description):</label>
+        <textarea name="bio" rows="4"></textarea>
+
+        <button type="submit">Save Profile</button>
+    </form>
+
+</body>
+</html>

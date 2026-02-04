@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Matches</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; text-align: center; }
+        .grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 30px; }
+        
+        .card { 
+            background: white; 
+            width: 300px; 
+            padding: 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            border-top: 5px solid #2ecc71; /* Green for Success */
+        }
+
+        h2 { margin: 10px 0 5px 0; color: #333; }
+        
+        /* The Secret Box */
+        .secret-reveal {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px dashed #2196f3;
+        }
+        .secret-label { font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; color: #555; }
+        .secret-value { font-size: 1.2em; font-weight: bold; margin-top: 5px; }
+
+        .btn-back { display: inline-block; margin-top: 20px; text-decoration: none; color: #555; }
+    </style>
+</head>
+<body>
+
+    <h1>🎉 It's a Match!</h1>
+    <p>You matched with these students. Use the info below to contact them.</p>
+
+    <div class="grid">
+        {% for person in matches %}
+        <div class="card">
+            <div style="font-size: 50px;">🤫</div>
+            
+            <h2>Student #{{ person.user_id }}</h2>
+            <p>{{ person.year_of_study }} - {{ person.department }}</p>
+
+            <div class="secret-reveal">
+                <div class="secret-label">Secret Contact Method</div>
+                <div class="secret-value">{{ person.contact_info }}</div>
+            </div>
+            
+            <p style="color: #666; font-style: italic; margin-top: 15px;">
+                "{{ person.bio }}"
+            </p>
+        </div>
+        {% else %}
+        <p>No matches yet. Keep swiping!</p>
+        {% endfor %}
+    </div>
+
+    <a href="/dashboard" class="btn-back">← Back to Matching</a>
+
+</body>
+</html>
