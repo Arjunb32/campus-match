@@ -16,8 +16,14 @@ services:
           name: matchmaker-db
           property: connectionString
 
-  - type: postgres
+  - type: pserv
     name: matchmaker-db
-    ipAllowList: []
-    databaseName: matchmaker
-    user: matchmaker
+    runtime: docker
+    repo: https://github.com/render-examples/postgresql.git
+    envVars:
+      - key: POSTGRES_DB
+        value: matchmaker
+      - key: POSTGRES_USER
+        value: matchmaker
+      - key: POSTGRES_PASSWORD
+        generateValue: true
