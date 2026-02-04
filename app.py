@@ -189,6 +189,11 @@ def send_interest(receiver_id):
     flash("Interest sent! Waiting for their response.")
     return redirect(url_for('dashboard'))
 
+# Create tables on startup (for first deploy)
+with app.app_context():
+    db.create_all()
+    print("Database tables created/verified!")
+
 if __name__ == "__main__":
     # host='0.0.0.0' allows other devices on the network to connect
     app.run(debug=True, host='0.0.0.0')
