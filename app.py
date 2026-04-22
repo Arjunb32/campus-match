@@ -1,13 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
-from werkzeug.security import generate_password_hash, check_password_hash
-# IMPORT THE NEW 'Preferences' MODEL
-from models import db, User, Profile, Match, Preferences 
-
-app = Flask(__name__)
 import os
+import hmac
+from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Profile, Match, Preferences
+from models import db, User, Profile, Match, Preferences, UserAnswer
 
 app = Flask(__name__)
 
@@ -30,9 +26,129 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+
+def get_admin_credentials():
+    """Read admin credentials from environment with local defaults."""
+    admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+    admin_password_hash = os.environ.get('ADMIN_PASSWORD_HASH')
+    admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+    return admin_username, admin_password_hash, admin_password
+
+
+def is_valid_admin_login(username, password):
+    admin_username, admin_password_hash, admin_password = get_admin_credentials()
+    valid_username = hmac.compare_digest(username, admin_username)
+    if not valid_username:
+        return False
+
+    if admin_password_hash:
+        return check_password_hash(admin_password_hash, password)
+
+    return hmac.compare_digest(password, admin_password)
+
+
+def admin_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        if not session.get('is_admin'):
+            return redirect(url_for('admin_login'))
+        return view_func(*args, **kwargs)
+    return wrapped_view
+
 @app.route('/')
 def home():
-    return "<h1>Campus Match</h1> <a href='/register'>Sign Up</a> | <a href='/login'>Login</a>"
+    return "<h1>Campus Match</h1> <a href='/register'>Sign Up</a> | <a href='/login'>Login</a> | <a href='/admin/login'>Admin</a>"
+
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if session.get('is_admin'):
+        return redirect(url_for('admin_dashboard'))
+
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password']
+
+        if is_valid_admin_login(username, password):
+            session['is_admin'] = True
+            return redirect(url_for('admin_dashboard'))
+
+        flash('Invalid admin credentials')
+
+    return render_template('admin_login.html')
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('is_admin', None)
+    return redirect(url_for('admin_login'))
+
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    users = User.query.order_by(User.created_at.desc()).all()
+    prefs_by_user = {pref.user_id: pref for pref in Preferences.query.all()}
+
+    match_counts = {}
+    for match in Match.query.all():
+        match_counts[match.sender_id] = match_counts.get(match.sender_id, 0) + 1
+        match_counts[match.receiver_id] = match_counts.get(match.receiver_id, 0) + 1
+
+    stats = {
+        'total_users': User.query.count(),
+        'verified_users': User.query.filter_by(is_verified=True).count(),
+        'profiled_users': Profile.query.count(),
+        'matched_pairs': Match.query.filter_by(status='matched').count(),
+    }
+
+    return render_template(
+        'admin_dashboard.html',
+        users=users,
+        prefs_by_user=prefs_by_user,
+        match_counts=match_counts,
+        stats=stats
+    )
+
+
+@app.route('/admin/user/<int:user_id>/toggle_verify', methods=['POST'])
+@admin_required
+def admin_toggle_verify(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_verified = not user.is_verified
+    db.session.commit()
+    flash(f"Verification updated for {user.email}")
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/user/<int:user_id>/toggle_anonymous', methods=['POST'])
+@admin_required
+def admin_toggle_anonymous(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_anonymous = not user.is_anonymous
+    db.session.commit()
+    flash(f"Anonymity updated for {user.email}")
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/user/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    email = user.email
+
+    Match.query.filter(
+        (Match.sender_id == user_id) | (Match.receiver_id == user_id)
+    ).delete(synchronize_session=False)
+    UserAnswer.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    Preferences.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    Profile.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+
+    db.session.delete(user)
+    db.session.commit()
+
+    flash(f"Deleted user and related data: {email}")
+    return redirect(url_for('admin_dashboard'))
 
 # --- REGISTRATION FLOW ---
 @app.route('/register', methods=['GET', 'POST'])
@@ -146,6 +262,29 @@ def login():
         else:
             flash('Invalid email or password')
     return render_template('login.html')
+
+@app.route('/my_matches')
+def my_matches():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    current_user_id = session['user_id']
+    
+    # Get all matches where status is 'matched' (both sent and received)
+    matched_users = Match.query.filter(
+        ((Match.sender_id == current_user_id) | (Match.receiver_id == current_user_id)),
+        Match.status == 'matched'
+    ).all()
+    
+    # Get the profiles of matched users
+    matched_profiles = []
+    for match in matched_users:
+        other_user_id = match.receiver_id if match.sender_id == current_user_id else match.sender_id
+        profile = Profile.query.filter_by(user_id=other_user_id).first()
+        if profile:
+            matched_profiles.append(profile)
+    
+    return render_template('my_matches.html', matches=matched_profiles)
 
 @app.route('/logout')
 def logout():

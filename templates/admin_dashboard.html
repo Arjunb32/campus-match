@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f4f6fb; color: #1f2937; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: white; border-radius: 10px; padding: 14px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+        .stat-card strong { font-size: 24px; display: block; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+        th, td { padding: 10px; border-bottom: 1px solid #edf0f5; vertical-align: top; text-align: left; }
+        th { background: #e9eefb; font-size: 14px; }
+        .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .yes { background: #dff6e4; color: #137333; }
+        .no { background: #fce8e6; color: #b3261e; }
+        .actions form { display: inline-block; margin: 3px 4px 3px 0; }
+        .btn { border: none; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-verify { background: #0ea5e9; color: white; }
+        .btn-anon { background: #6366f1; color: white; }
+        .btn-delete { background: #ef4444; color: white; }
+        .btn-logout { background: #111827; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; }
+        .flash { background: #ecfdf5; color: #065f46; padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #a7f3d0; }
+        .small { font-size: 12px; color: #4b5563; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>Admin Dashboard</h1>
+        <a class="btn-logout" href="/admin/logout">Logout</a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="stats">
+        <div class="stat-card">
+            <span>Total Users</span>
+            <strong>{{ stats.total_users }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>Verified Users</span>
+            <strong>{{ stats.verified_users }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>Profiles Created</span>
+            <strong>{{ stats.profiled_users }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>Matched Pairs</span>
+            <strong>{{ stats.matched_pairs }}</strong>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Status</th>
+                <th>Profile</th>
+                <th>Preferences</th>
+                <th>Engagement</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            {% set pref = prefs_by_user.get(user.id) %}
+            <tr>
+                <td>
+                    <strong>#{{ user.id }}</strong><br>
+                    {{ user.email }}<br>
+                    <span class="small">Created: {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'N/A' }}</span>
+                </td>
+                <td>
+                    <div>
+                        Verified:
+                        <span class="pill {{ 'yes' if user.is_verified else 'no' }}">
+                            {{ 'Yes' if user.is_verified else 'No' }}
+                        </span>
+                    </div>
+                    <div style="margin-top: 6px;">
+                        Anonymous:
+                        <span class="pill {{ 'yes' if user.is_anonymous else 'no' }}">
+                            {{ 'On' if user.is_anonymous else 'Off' }}
+                        </span>
+                    </div>
+                </td>
+                <td>
+                    {% if user.profile %}
+                        {{ user.profile.first_name }} {{ user.profile.last_name }}<br>
+                        <span class="small">{{ user.profile.year_of_study }} - {{ user.profile.department }}</span>
+                    {% else %}
+                        <span class="small">No profile yet</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if pref %}
+                        Gender: {{ pref.pref_gender }}<br>
+                        Year: {{ pref.pref_year }}<br>
+                        <span class="small">Vibe: {{ pref.pref_vibe }}</span>
+                    {% else %}
+                        <span class="small">No preferences yet</span>
+                    {% endif %}
+                </td>
+                <td>
+                    Total match records: <strong>{{ match_counts.get(user.id, 0) }}</strong>
+                </td>
+                <td class="actions">
+                    <form method="POST" action="/admin/user/{{ user.id }}/toggle_verify">
+                        <button class="btn btn-verify" type="submit">
+                            {{ 'Unverify' if user.is_verified else 'Verify' }}
+                        </button>
+                    </form>
+                    <form method="POST" action="/admin/user/{{ user.id }}/toggle_anonymous">
+                        <button class="btn btn-anon" type="submit">
+                            {{ 'Disable Anonymous' if user.is_anonymous else 'Enable Anonymous' }}
+                        </button>
+                    </form>
+                    <form method="POST" action="/admin/user/{{ user.id }}/delete" onsubmit="return confirm('Delete this user and all related data?');">
+                        <button class="btn btn-delete" type="submit">Delete User</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">No users found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
