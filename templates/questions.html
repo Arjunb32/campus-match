@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compatibility Questions</title>
+    <style>
+        body { font-family: "Segoe UI", sans-serif; max-width: 860px; margin: 30px auto; padding: 20px; background: #f7fafc; color: #1f2937; }
+        .card { background: white; border-radius: 14px; padding: 28px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
+        .question { padding: 18px; border: 1px solid #e5e7eb; border-radius: 12px; margin-top: 16px; }
+        .question h2 { margin: 0 0 14px 0; font-size: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; }
+        select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; margin-top: 20px; border: none; border-radius: 8px; background: #7c3aed; color: white; font-weight: 700; cursor: pointer; }
+        .flash { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+        .options { color: #6b7280; font-size: 14px; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Compatibility Questions</h1>
+        <p>Answer these once and the app will use them to score potential matches.</p>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('questions') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            {% for question in questions %}
+                {% set answer = existing_answers.get(question.id) %}
+                <div class="question">
+                    <h2>{{ loop.index }}. {{ question.text }}</h2>
+                    <div class="options">Options: A = {{ question.option_a }} | B = {{ question.option_b }}</div>
+
+                    <div class="grid">
+                        <div>
+                            <label for="my_answer_{{ question.id }}">Your answer</label>
+                            <select id="my_answer_{{ question.id }}" name="my_answer_{{ question.id }}" required>
+                                <option value="">Select</option>
+                                <option value="{{ question.option_a }}" {% if answer and answer.my_answer == question.option_a %}selected{% endif %}>A - {{ question.option_a }}</option>
+                                <option value="{{ question.option_b }}" {% if answer and answer.my_answer == question.option_b %}selected{% endif %}>B - {{ question.option_b }}</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="preferred_partner_answer_{{ question.id }}">Preferred partner answer</label>
+                            <select id="preferred_partner_answer_{{ question.id }}" name="preferred_partner_answer_{{ question.id }}" required>
+                                <option value="">Select</option>
+                                <option value="{{ question.option_a }}" {% if answer and answer.preferred_partner_answer == question.option_a %}selected{% endif %}>A - {{ question.option_a }}</option>
+                                <option value="{{ question.option_b }}" {% if answer and answer.preferred_partner_answer == question.option_b %}selected{% endif %}>B - {{ question.option_b }}</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="importance_{{ question.id }}">Importance</label>
+                            <select id="importance_{{ question.id }}" name="importance_{{ question.id }}" required>
+                                <option value="1" {% if answer and answer.importance_level == 1 %}selected{% endif %}>Low</option>
+                                <option value="5" {% if not answer or answer.importance_level == 5 %}selected{% endif %}>Medium</option>
+                                <option value="10" {% if answer and answer.importance_level == 10 %}selected{% endif %}>High</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <button type="submit">Save Answers</button>
+        </form>
+    </div>
+</body>
+</html>

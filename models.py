@@ -1,133 +1,124 @@
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-# Initialize the database instance
+from flask_sqlalchemy import SQLAlchemy
+
+
 db = SQLAlchemy()
 
-# 1. THE USER MODEL (Authentication & Account Security)
+
 class User(db.Model):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    # College Email serves as the unique ID for verification
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    
-    # Verification Flags
-    is_verified = db.Column(db.Boolean, default=False) # False until they click the email link
-    verification_code = db.Column(db.String(6), nullable=True) # Stores the 6-digit OTP
-    
-    # Privacy Settings
-    is_anonymous = db.Column(db.Boolean, default=True) # If True, name/photo are hidden in search
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    password_hash = db.Column(db.String(255), nullable=False)
+    is_verified = db.Column(db.Boolean, default=False, nullable=False)
+    verification_code = db.Column(db.String(6), nullable=True)
+    verification_code_expires_at = db.Column(db.DateTime, nullable=True)
+    verified_at = db.Column(db.DateTime, nullable=True)
+    is_anonymous = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    # Relationships
-    profile = db.relationship('Profile', backref='user', uselist=False)
-    answers = db.relationship('UserAnswer', backref='user', lazy=True)
+    profile = db.relationship(
+        "Profile",
+        backref="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    preferences = db.relationship(
+        "Preferences",
+        backref="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    answers = db.relationship(
+        "UserAnswer",
+        backref="user",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
-        return f'<User {self.email}>'
+        return f"<User {self.email}>"
 
 
-# 2. THE PROFILE MODEL (Demographics & Display Info)
 class Profile(db.Model):
-    __tablename__ = 'profiles'
+    __tablename__ = "profiles"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    # Identity (Hidden in "Blind Mode")
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
-    profile_pic = db.Column(db.String(255), default='default_avatar.png')
-    
-    # Matching Criteria (Visible in "Blind Mode")
-    gender = db.Column(db.String(20), nullable=False)  # e.g., 'Male', 'Female', 'Non-binary'
-    orientation = db.Column(db.String(20), nullable=False) # e.g., 'Straight', 'Gay', 'Bi'
-    
-    # College Specifics
-    year_of_study = db.Column(db.String(10), nullable=False) # e.g., '3rd Year'
-    department = db.Column(db.String(50), nullable=False)    # e.g., 'Computer Science'
-    
-    # Personality
+    profile_pic = db.Column(db.String(255), default="default_avatar.png")
+    gender = db.Column(db.String(20), nullable=False)
+    orientation = db.Column(db.String(20), nullable=False)
+    year_of_study = db.Column(db.String(20), nullable=False)
+    department = db.Column(db.String(50), nullable=False)
+    vibe = db.Column(db.String(50), nullable=True)
+    hobbies = db.Column(db.String(255), nullable=True)
     bio = db.Column(db.Text, nullable=True)
-    relationship_goal = db.Column(db.String(50), nullable=False) # e.g., 'Serious', 'Casual', 'Study Partner'
-
-    # In models.py, inside class Profile(db.Model):
-
-    # ... keep your existing columns ...
     relationship_goal = db.Column(db.String(50), nullable=False)
-    bio = db.Column(db.Text, nullable=True)
-    
-    # NEW: The Secret Contact Field
-    contact_info = db.Column(db.String(100), nullable=False) # e.g. "Insta: @arjun_k"
+    contact_info = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
-        return f'<Profile {self.first_name} - {self.department}>'
+        return f"<Profile {self.first_name} - {self.department}>"
 
 
-# 3. THE QUESTION BANK (Static questions for everyone)
 class Question(db.Model):
-    __tablename__ = 'questions'
+    __tablename__ = "questions"
 
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(255), nullable=False) # e.g., "Are you messy or tidy?"
+    text = db.Column(db.String(255), nullable=False)
     option_a = db.Column(db.String(100), nullable=False)
     option_b = db.Column(db.String(100), nullable=False)
-    # You can add more options or make it dynamic later
-
-
-# 4. THE COMPATIBILITY ENGINE (User Answers)
-class UserAnswer(db.Model):
-    __tablename__ = 'user_answers'
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
-    
-    # The Logic: "I am X, looking for Y, and it matters Z amount"
-    my_answer = db.Column(db.String(100), nullable=False)
-    preferred_partner_answer = db.Column(db.String(100), nullable=False)
-    
-    # Importance Weight: 0=Irrelevant, 1=Little, 5=Very Important, 10=Mandatory
-    importance_level = db.Column(db.Integer, default=5)
-
-
-# 5. THE MATCH SYSTEM (Handling the "Blind" Reveal)
-class Match(db.Model):
-    __tablename__ = 'matches'
-
-    id = db.Column(db.Integer, primary_key=True)
-    
-    # Who is involved?
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    # The Match Score (Cached here so we don't recalculate every time)
-    compatibility_score = db.Column(db.Integer, nullable=False) # e.g., 85
-    
-    # Status of the Match
-    # 'pending' = Sender liked Receiver (Receiver sees blurred request)
-    # 'matched' = Receiver accepted (Profiles Revealed)
-    # 'rejected' = Receiver declined
-    # 'blocked' = Safety feature
-    status = db.Column(db.String(20), default='pending')
-    
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # 6. THE PREFERENCES MODEL (What they are looking for)
-class Preferences(db.Model):
-    __tablename__ = 'preferences'
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    # Who are they looking for?
-    pref_gender = db.Column(db.String(20), nullable=False) # e.g. "Female"
-    pref_year = db.Column(db.String(20), nullable=False)   # e.g. "Any" or "3rd Year"
-    
-    # Compatibility Questions
-    pref_vibe = db.Column(db.String(50), nullable=False)   # e.g. "Chill" or "Party"
-    pref_hobbies = db.Column(db.String(100), nullable=True) # e.g. "Movies, Gaming"
 
     def __repr__(self):
-        return f'<Pref {self.user_id}>'
+        return f"<Question {self.id}>"
+
+
+class UserAnswer(db.Model):
+    __tablename__ = "user_answers"
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "question_id", name="uq_user_answers_user_question"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=False)
+    my_answer = db.Column(db.String(100), nullable=False)
+    preferred_partner_answer = db.Column(db.String(100), nullable=False)
+    importance_level = db.Column(db.Integer, default=5, nullable=False)
+
+    question = db.relationship("Question", backref="answers")
+
+    def __repr__(self):
+        return f"<UserAnswer user={self.user_id} question={self.question_id}>"
+
+
+class Match(db.Model):
+    __tablename__ = "matches"
+
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    pair_key = db.Column(db.String(64), unique=True, nullable=False)
+    compatibility_score = db.Column(db.Integer, nullable=False, default=0)
+    status = db.Column(db.String(20), default="pending", nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f"<Match {self.sender_id}->{self.receiver_id} {self.status}>"
+
+
+class Preferences(db.Model):
+    __tablename__ = "preferences"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
+    pref_gender = db.Column(db.String(20), nullable=False)
+    pref_year = db.Column(db.String(20), nullable=False)
+    pref_vibe = db.Column(db.String(50), nullable=False)
+    pref_hobbies = db.Column(db.String(100), nullable=True)
+
+    def __repr__(self):
+        return f"<Pref {self.user_id}>"

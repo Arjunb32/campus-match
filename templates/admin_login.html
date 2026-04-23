@@ -1,37 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 420px; margin: 60px auto; text-align: center; background: #f5f7fb; padding: 25px; border-radius: 12px; }
-        h2 { margin-top: 0; }
-        input { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #d9d9d9; border-radius: 6px; }
-        button { background-color: #2f6fed; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 6px; width: 100%; font-weight: 600; }
-        button:hover { background-color: #2559be; }
-        a { display: block; margin-top: 12px; color: #2f6fed; text-decoration: none; }
-        .error { color: #d93025; font-weight: 600; }
+        body { font-family: "Segoe UI", sans-serif; max-width: 420px; margin: 50px auto; padding: 24px; background: #111827; color: #f9fafb; }
+        .card { background: #1f2937; border-radius: 14px; padding: 28px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25); }
+        label { display: block; margin-top: 14px; font-weight: 600; }
+        input { width: 100%; padding: 12px; margin-top: 6px; border-radius: 8px; border: 1px solid #374151; background: #111827; color: white; box-sizing: border-box; }
+        button { width: 100%; margin-top: 18px; padding: 12px; border: none; border-radius: 8px; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
+        .flash { background: #3f1d1d; color: #fca5a5; border: 1px solid #7f1d1d; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+        a { color: #93c5fd; text-decoration: none; }
     </style>
 </head>
 <body>
-    <h2>Admin Portal</h2>
-    <p>Use your admin credentials to manage users.</p>
+    <div class="card">
+        <h1>Admin Portal</h1>
+        <p>Use the configured admin credentials to manage the app.</p>
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <p class="error">{{ messages[0] }}</p>
-      {% endif %}
-    {% endwith %}
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-    <form method="POST" action="/admin/login">
-        <label>Username:</label>
-        <input type="text" name="username" required>
+        <form method="POST" action="{{ url_for('admin_login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label>Password:</label>
-        <input type="password" name="password" required>
+            <label for="username">Username</label>
+            <input id="username" type="text" name="username" required>
 
-        <button type="submit">Login as Admin</button>
-    </form>
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" required>
 
-    <a href="/login">Back to User Login</a>
+            <button type="submit">Login</button>
+        </form>
+
+        <p><a href="{{ url_for('login') }}">Back to user login</a></p>
+    </div>
 </body>
 </html>

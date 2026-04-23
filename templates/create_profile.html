@@ -1,63 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Create Your Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Profile</title>
     <style>
-        body { font-family: sans-serif; max-width: 500px; margin: 20px auto; padding: 20px; }
-        input, select, textarea { display: block; width: 100%; padding: 10px; margin: 10px 0; }
-        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; width: 100%; cursor: pointer; }
-        label { font-weight: bold; }
+        body { font-family: "Segoe UI", sans-serif; max-width: 680px; margin: 30px auto; padding: 20px; background: #f7fafc; color: #1f2937; }
+        .card { background: white; border-radius: 14px; padding: 28px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        label { display: block; font-weight: 600; margin-top: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; }
+        textarea { min-height: 120px; resize: vertical; }
+        button { margin-top: 20px; width: 100%; padding: 12px; border: none; border-radius: 8px; background: #0f766e; color: white; font-weight: 700; cursor: pointer; }
+        .flash { background: #ecfeff; color: #155e75; border: 1px solid #a5f3fc; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+        .hint { color: #4b5563; margin-bottom: 14px; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h1>Build Your Profile</h1>
+        <p class="hint">This is what the app uses to find good matches. Contact info is only shown after both people match.</p>
 
-    <h2>Setup Your Profile</h2>
-    <form method="POST" action="/create_profile">
-        
-        <label>First Name:</label>
-        <input type="text" name="first_name" required>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-        <label>Last Name:</label>
-        <input type="text" name="last_name" required>
+        <form method="POST" action="{{ url_for('create_profile') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label>Gender:</label>
-        <select name="gender">
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Non-binary">Non-binary</option>
-        </select>
+            <div class="grid">
+                <div>
+                    <label for="first_name">First Name</label>
+                    <input id="first_name" type="text" name="first_name" value="{{ profile.first_name or '' }}" required>
+                </div>
+                <div>
+                    <label for="last_name">Last Name</label>
+                    <input id="last_name" type="text" name="last_name" value="{{ profile.last_name or '' }}" required>
+                </div>
+            </div>
 
-        <label>Department:</label>
-        <input type="text" name="department" placeholder="e.g. CSE, ECE, Mech" required>
+            <div class="grid">
+                <div>
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender" required>
+                        {% for option in ['Male', 'Female', 'Non-binary'] %}
+                            <option value="{{ option }}" {% if profile.gender == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="year">Year of Study</label>
+                    <select id="year" name="year" required>
+                        {% for option in ['1st Year', '2nd Year', '3rd Year', '4th Year'] %}
+                            <option value="{{ option }}" {% if profile.year_of_study == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-        <label>Year of Study:</label>
-        <select name="year">
-            <option value="1st Year">1st Year</option>
-            <option value="2nd Year">2nd Year</option>
-            <option value="3rd Year">3rd Year</option>
-            <option value="4th Year">4th Year</option>
-        </select>
+            <div class="grid">
+                <div>
+                    <label for="department">Department</label>
+                    <input id="department" type="text" name="department" value="{{ profile.department or '' }}" required>
+                </div>
+                <div>
+                    <label for="orientation">Orientation</label>
+                    <select id="orientation" name="orientation" required>
+                        {% for option in ['Straight', 'Gay', 'Bisexual'] %}
+                            <option value="{{ option }}" {% if profile.orientation == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-        <label>Orientation (Hidden until matched):</label>
-        <select name="orientation">
-            <option value="Straight">Straight</option>
-            <option value="Gay">Gay</option>
-            <option value="Bisexual">Bisexual</option>
-        </select>
+            <div class="grid">
+                <div>
+                    <label for="vibe">Your Vibe</label>
+                    <select id="vibe" name="vibe" required>
+                        {% for option in ['Chill', 'Party', 'Studious', 'Adventurous'] %}
+                            <option value="{{ option }}" {% if profile.vibe == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="hobbies">Hobbies</label>
+                    <input id="hobbies" type="text" name="hobbies" value="{{ profile.hobbies or '' }}" placeholder="Movies, coding, sports, books">
+                </div>
+            </div>
 
-        <label>Relationship Goal:</label>
-        <select name="relationship_goal">
-            <option value="Serious">Serious Relationship</option>
-            <option value="Casual">Casual Dating</option>
-            <option value="Friends">Friends / Study Partner</option>
-        </select>
-         <label style="color: #d63031;">Secret Contact Info (Only revealed to Matches):</label>
-        <input type="text" name="contact_info" placeholder="e.g. Instagram ID, WhatsApp, or Discord Tag" required>
-        <label>Bio (Short description):</label>
-        <textarea name="bio" rows="4"></textarea>
+            <label for="relationship_goal">Relationship Goal</label>
+            <select id="relationship_goal" name="relationship_goal" required>
+                {% for option in ['Serious', 'Casual', 'Friends'] %}
+                    <option value="{{ option }}" {% if profile.relationship_goal == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
 
-        <button type="submit">Save Profile</button>
-    </form>
+            <label for="contact_info">Private Contact Info</label>
+            <input id="contact_info" type="text" name="contact_info" value="{{ profile.contact_info or '' }}" placeholder="Instagram, WhatsApp, Discord, or phone" required>
 
+            <label for="bio">Bio</label>
+            <textarea id="bio" name="bio" placeholder="A short intro about you">{{ profile.bio or '' }}</textarea>
+
+            <button type="submit">Save Profile</button>
+        </form>
+    </div>
 </body>
 </html>

@@ -3,6 +3,7 @@ services:
     name: campus-match
     runtime: python
     buildCommand: "pip install -r requirements.txt"
+    preDeployCommand: "flask --app app:app check-config && flask --app app:app db upgrade"
     startCommand: "gunicorn app:app"
     envVars:
       - key: PYTHON_VERSION

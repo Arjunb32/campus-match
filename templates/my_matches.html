@@ -1,65 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Matches</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; text-align: center; }
-        .grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 30px; }
-        
-        .card { 
-            background: white; 
-            width: 300px; 
-            padding: 20px; 
-            border-radius: 15px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            border-top: 5px solid #2ecc71; /* Green for Success */
-        }
-
-        h2 { margin: 10px 0 5px 0; color: #333; }
-        
-        /* The Secret Box */
-        .secret-reveal {
-            background: #e3f2fd;
-            color: #0d47a1;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 2px dashed #2196f3;
-        }
-        .secret-label { font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; color: #555; }
-        .secret-value { font-size: 1.2em; font-weight: bold; margin-top: 5px; }
-
-        .btn-back { display: inline-block; margin-top: 20px; text-decoration: none; color: #555; }
+        body { font-family: "Segoe UI", sans-serif; background: #f8fafc; margin: 0; color: #0f172a; }
+        .page { max-width: 980px; margin: 0 auto; padding: 30px 20px 40px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+        .card { background: white; border-radius: 16px; padding: 22px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); border-top: 6px solid #16a34a; }
+        .contact { background: #ecfdf5; border: 1px solid #a7f3d0; color: #166534; border-radius: 10px; padding: 12px; margin-top: 14px; }
+        a { color: #0f766e; text-decoration: none; font-weight: 600; }
+        .empty { background: #fff7ed; border: 1px dashed #fdba74; border-radius: 16px; padding: 20px; color: #9a3412; }
     </style>
 </head>
 <body>
-
-    <h1>🎉 It's a Match!</h1>
-    <p>You matched with these students. Use the info below to contact them.</p>
-
-    <div class="grid">
-        {% for person in matches %}
-        <div class="card">
-            <div style="font-size: 50px;">🤫</div>
-            
-            <h2>Student #{{ person.user_id }}</h2>
-            <p>{{ person.year_of_study }} - {{ person.department }}</p>
-
-            <div class="secret-reveal">
-                <div class="secret-label">Secret Contact Method</div>
-                <div class="secret-value">{{ person.contact_info }}</div>
+    <div class="page">
+        <div class="topbar">
+            <div>
+                <h1>My Matches</h1>
+                <p>These are the students who accepted your interest or whose request you accepted.</p>
             </div>
-            
-            <p style="color: #666; font-style: italic; margin-top: 15px;">
-                "{{ person.bio }}"
-            </p>
+            <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
         </div>
+
+        {% if matches %}
+            <div class="grid">
+                {% for item in matches %}
+                    <div class="card">
+                        <h2>{{ item.profile.first_name }} {{ item.profile.last_name }}</h2>
+                        <p>{{ item.profile.year_of_study }} - {{ item.profile.department }}</p>
+                        <p><strong>Relationship goal:</strong> {{ item.profile.relationship_goal }}</p>
+                        <p><strong>Compatibility:</strong> {{ item.match.compatibility_score }}%</p>
+                        <p>{{ item.profile.bio or 'No bio added yet.' }}</p>
+
+                        <div class="contact">
+                            <strong>Private Contact:</strong><br>
+                            {{ item.profile.contact_info }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         {% else %}
-        <p>No matches yet. Keep swiping!</p>
-        {% endfor %}
+            <div class="empty">You do not have any confirmed matches yet.</div>
+        {% endif %}
     </div>
-
-    <a href="/dashboard" class="btn-back">← Back to Matching</a>
-
 </body>
 </html>

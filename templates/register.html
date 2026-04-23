@@ -1,29 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Student Sign Up</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
     <style>
-        body { font-family: sans-serif; max-width: 400px; margin: 50px auto; text-align: center; }
-        input { display: block; width: 100%; padding: 10px; margin: 10px 0; }
-        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .error { color: red; }
+        body { font-family: "Segoe UI", sans-serif; max-width: 420px; margin: 50px auto; padding: 24px; background: #f5f7fb; color: #1f2937; }
+        .card { background: #ffffff; border-radius: 14px; padding: 28px; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
+        h1 { margin-top: 0; font-size: 28px; }
+        p { color: #4b5563; }
+        label { display: block; margin-top: 14px; font-weight: 600; }
+        input { width: 100%; padding: 12px; margin-top: 6px; border-radius: 8px; border: 1px solid #d1d5db; box-sizing: border-box; }
+        button { width: 100%; margin-top: 18px; padding: 12px; border: none; border-radius: 8px; background: #0f766e; color: white; font-weight: 700; cursor: pointer; }
+        .flash { background: #ecfeff; color: #155e75; border: 1px solid #a5f3fc; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+        a { color: #0f766e; text-decoration: none; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h1>Join Campus Match</h1>
+        <p>Create your account, verify your email, and then set up your profile.</p>
 
-    <h2>Join the Matchmaker</h2>
-    <p>Use your college email to verify your identity.</p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-    <form method="POST" action="/register">
-        <label>College Email:</label>
-        <input type="email" name="email" placeholder="example@gmail.com" required>
+        <form method="POST" action="{{ url_for('register') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label>Password:</label>
-        <input type="password" name="password" placeholder="Create a password" required>
+            <label for="email">College Email</label>
+            <input id="email" type="email" name="email" placeholder="name@college.edu" required>
 
-        <button type="submit">Create Account</button>
-    </form>
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" placeholder="At least 8 characters" required>
 
+            <button type="submit">Create Account</button>
+        </form>
+
+        <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+    </div>
 </body>
 </html>
